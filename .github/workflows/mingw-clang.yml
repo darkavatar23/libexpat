@@ -52,23 +52,32 @@ jobs:
           - name: wchar_t
             cmake_args: -DEXPAT_CHAR_TYPE=wchar_t
     runs-on: ubuntu-26.04
-    env:
-      cmake_args: ${{ matrix.cmake_args }}
+    container:
+      image: debian:trixie
+      env:
+        cmake_args: ${{ matrix.cmake_args }}
+      options: --security-opt apparmor=unconfined --security-opt seccomp=unconfined  # for Wine
+    defaults:
+      run:
+        shell: "bash -e {0}"  # because the default is only POSIX shell
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-    - name: Install build dependencies (32bit Wine)
+    - name: Install build dependencies
       run: |-
         set -x
-
-        # Install 32bit Wine
-        sudo dpkg --add-architecture i386  # for wine32
-        sudo apt-get update  # due to new architecture
-        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
+        dpkg --add-architecture i386  # for wine32
+        apt-get update
+        timeout 10m apt-get install --yes --no-install-recommends -V \
+            ca-certificates \
+            cmake \
+            make \
             retry \
+            wget \
             wine \
-            wine32:i386
+            wine32:i386 \
+            xz-utils
 
     - name: Install build dependencies (Clang-based MinGW toolchain)
       run: |-
@@ -115,6 +124,10 @@ jobs:
 
     - name: Run unit tests
       run: |-
+        # Workaround this error from Wine:
+        #   wine: '/github/home' is not owned by you, refusing to create a configuration directory there
+        chown -R root:root /github/home/
+
         # NOTE: The retry is meant to mitigate Wine crashing randomly in CI
         retry='retry --times 5 --'
         set -x
