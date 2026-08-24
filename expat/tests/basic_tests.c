@@ -3529,7 +3529,7 @@ START_TEST(test_buffer_can_grow_to_max) {
       xml_failure(parser);
 
 // Avoid running into "AddressSanitizer: out of memory" on 32bit Windows
-#if ! defined(_WIN32) || EXPAT_TESTS_ASAN == 0 || EXPAT_TESTS_64BIT == 1
+#if ! defined(_MSC_VER) || EXPAT_TESTS_ASAN == 0 || EXPAT_TESTS_64BIT == 1
     // XML_CONTEXT_BYTES of the prefix may remain in the buffer;
     // subtracting the whole prefix is easiest, and close enough.
     assert_true(XML_GetBuffer(parser, maxbuf - prefix_len) != NULL);
