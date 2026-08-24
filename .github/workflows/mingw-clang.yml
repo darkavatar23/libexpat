@@ -42,6 +42,7 @@ permissions:
 jobs:
   mingw_clang:
     name: Compile and test with Clang-based MinGW (${{ matrix.name }})
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -64,7 +65,7 @@ jobs:
         # Install 32bit Wine
         sudo dpkg --add-architecture i386  # for wine32
         sudo apt-get update  # due to new architecture
-        sudo apt-get install --yes --no-install-recommends -V \
+        sudo timeout 10m apt-get install --yes --no-install-recommends -V \
             retry \
             wine \
             wine32:i386
